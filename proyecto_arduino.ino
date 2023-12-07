@@ -22,6 +22,9 @@
 #define PIN_LED_2 5
 #define PIN_LED_3 6
 #define PIN_LED_4 9
+#define PIN_LED_5 10
+#define PIN_BUTTON_1 4
+#define PIN_BUTTON_1 7
 
 
 #define VELOCIDAD_SERIAL 9600
@@ -34,11 +37,17 @@
 uint8_t counter_led = 0;
 uint8_t dir_led = 0; 
 uint8_t size_led = 4;
+uint8_t stop = 0;
+
+//intesidad del led
+uint8_t power_led = 255;
 
 unsigned long sample_time = 500;
 
 uint16_t gpio_pins[4] = {PIN_LED_1, PIN_LED_2, PIN_LED_3,PIN_LED_4};
 const uint8_t M_LED[4][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
+
+
 
 // ------------------------------------
 // Configuración Inicial
@@ -52,12 +61,14 @@ void setup()
   pinMode(PIN_LED_2, OUTPUT);
   pinMode(PIN_LED_3, OUTPUT);
   pinMode(PIN_LED_4, OUTPUT);
+  pinMode(PIN_LED_5, OUTPUT);
   
 
   digitalWrite(PIN_LED_1, LOW); // Enciende el LED
   digitalWrite(PIN_LED_2, LOW); // Enciende el LED
   digitalWrite(PIN_LED_3, LOW); // Enciende el LED
   digitalWrite(PIN_LED_4, LOW); // Enciende el LED
+
 }
 
 // ------------------------------------
@@ -66,17 +77,22 @@ void setup()
 void loop()
 {
   // Código principal del programa
-  if (counter_led == 4)
+  if (stop == 0)
   {
-    counter_led = 0;
+    counter_led++;
+    
+    if (counter_led == 4)
+    {
+      counter_led = 0;
+    }
+    for (int i = 0; i < 4; ++i)
+    {
+      // digitalWrite(gpio_pins[i], M_LED[counter_led][(dir_led==0)? (i):(-i + size_led-1)]);
+      analogWrite(gpio_pins[i], power_led*(M_LED[counter_led][(dir_led==0)? (i):(-i + size_led-1)]));
+    }
+    analogWrite(PIN_LED_5,power_led);
+    delay(sample_time);
   }
-  for (int i = 0; i < 4; ++i)
-  {
-    digitalWrite(gpio_pins[i], M_LED[counter_led][(dir_led==0)? (i):(-i + size_led-1)]);
-
-  }
-  counter_led++;
-  delay(sample_time);
 }
 
 // ------------------------------------
@@ -94,42 +110,39 @@ void Toogle_led(uint8_t pin)
   }
 }
 
-uint8_t toogle_data(uint8_t variable){
-	if (variable == 0) {
-		variable = 1;
+void toogle_data(bool variable){
+	if (variable == true) {
+		variable = false;
 	} else {
-		variable = 0;
+		variable = true;
 	}
-	return variable;
 }
+
 // void imprimir_intro()
 // {
 //   println("bienvenido")
 // }
 
-
 void serialEvent() {
-  while(Serial.available())
+  if (Serial.available() > 0)
   {
+    // recoge los datos del serial
     String dataString = Serial.readStringUntil('\n');
-
     Serial.println("comando  recibido: " + dataString);
-
-    // char datas =(char) dataString.c_str();
-
-    // Serial.println(datas);
     
+    // extraccion de letra y numero
     char letra;
     int numero;
     char data[10];
     dataString.toCharArray(data,dataString.length()+1);
-
-    int datas = sscanf(data,"%c%d",&letra,&numero);
+    sscanf(data,"%c%d",&letra,&numero);
 
     Serial.print("letra: ");
     Serial.println(letra);
     Serial.print("numero: ");
     Serial.println(numero);
+
+    //interpretacion los datos
 
     switch (letra)
     {
@@ -143,6 +156,22 @@ void serialEvent() {
       break;
     case 't':
       sample_time = numero;
+      break;
+    case 'p':
+      power_led = numero;
+      break;
+    case 'x':
+      if (stop == 1) 
+      {
+        stop = 0;
+      } 
+      else 
+      {
+        stop = 1;
+      }
+      Serial.print("stop:");
+      Serial.println(stop);
+      
       break;
     
     default:

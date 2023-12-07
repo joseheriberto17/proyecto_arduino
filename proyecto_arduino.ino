@@ -44,6 +44,7 @@ uint8_t power_led = 255;
 
 unsigned long sample_time = 500;
 
+// configuracion de la secuencia led
 uint16_t gpio_pins[4] = {PIN_LED_1, PIN_LED_2, PIN_LED_3,PIN_LED_4};
 const uint8_t M_LED[4][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
 
@@ -77,17 +78,17 @@ void setup()
 void loop()
 {
   // Código principal del programa
+  
   if (stop == 0)
   {
-    counter_led++;
-    
+    counter_led++;    
     if (counter_led == 4)
     {
       counter_led = 0;
     }
     for (int i = 0; i < 4; ++i)
     {
-      // digitalWrite(gpio_pins[i], M_LED[counter_led][(dir_led==0)? (i):(-i + size_led-1)]);
+      //control de la secuencia de leds
       analogWrite(gpio_pins[i], power_led*(M_LED[counter_led][(dir_led==0)? (i):(-i + size_led-1)]));
     }
     analogWrite(PIN_LED_5,power_led);
@@ -156,9 +157,13 @@ void serialEvent() {
       break;
     case 't':
       sample_time = numero;
+      Serial.print("muestreo: ");
+      Serial.println(sample_time);
       break;
     case 'p':
       power_led = numero;
+      Serial.print("potencia: ");
+      Serial.println(power_led);
       break;
     case 'x':
       if (stop == 1) 
@@ -169,7 +174,7 @@ void serialEvent() {
       {
         stop = 1;
       }
-      Serial.print("stop:");
+      Serial.print("stop: ");
       Serial.println(stop);
       
       break;

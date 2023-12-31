@@ -83,6 +83,11 @@ void setup()
 
   attachInterrupt(digitalPinToInterrupt(2),toogle_dir,RISING);
   attachInterrupt(digitalPinToInterrupt(3),toogle_stop,RISING);
+
+  // tiempo para que no se dispare la interrupcciones
+  delay(1000);
+  stop = 0;
+  dir_led = 0;
 }
 
 // ------------------------------------
